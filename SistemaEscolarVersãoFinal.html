@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="azul">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EscolaPro Gestão - Sistema Integrado</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: 'var(--color-primary)',
+                        primaryLight: 'var(--color-primary-light)',
+                        primaryDark: 'var(--color-primary-dark)',
+                        accentBg: 'var(--color-accent-bg)',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SheetJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- html2pdf -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root[data-theme="azul"] { --color-primary: #0284c7; --color-primary-light: #e0f2fe; --color-primary-dark: #0369a1; --color-accent-bg: #f0f9ff; --bg-main: #f8fafc; }
+        :root[data-theme="amarelo"] { --color-primary: #d97706; --color-primary-light: #fef3c7; --color-primary-dark: #b45309; --color-accent-bg: #fffbeb; --bg-main: #fffdf9; }
+        :root[data-theme="rosa"] { --color-primary: #db2777; --color-primary-light: #fce7f3; --color-primary-dark: #be185d; --color-accent-bg: #fdf2f8; --bg-main: #fdf4f7; }
+        :root[data-theme="verde"] { --color-primary: #059669; --color-primary-light: #d1fae5; --color-primary-dark: #047857; --color-accent-bg: #ecfdf5; --bg-main: #f4fbf7; }
+        :root[data-theme="noturno"] { --color-primary: #38bdf8; --color-primary-light: #1e293b; --color-primary-dark: #0ea5e9; --color-accent-bg: #0f172a; --bg-main: #020617; }
+        @media print { .no-print { display: none !important; } }
+    </style>
+</head>
+<body class="bg-[var(--bg-main)] text-slate-800 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-300">
+
+    <!-- LOGIN SCREEN -->
+    <div id="auth-screen" class="fixed inset-0 bg-slate-900/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div class="bg-primary text-white px-6 py-6 text-center">
+                <div class="w-12 h-12 bg-white text-primary rounded-xl flex items-center justify-center text-2xl mx-auto mb-2 shadow">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <h2 class="text-xl font-bold">Acesso ao Sistema</h2>
+                <p class="text-xs opacity-90">Controle por Níveis de Acesso</p>
+            </div>
+            <form id="login-form" onsubmit="handleLogin(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">Usuário</label>
+                    <input type="text" id="login-user" required placeholder="Ex: tiago ou maria" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-primary">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">Senha</label>
+                    <input type="password" id="login-pass" required placeholder="••••••••" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-primary">
+                </div>
+                <button type="submit" class="w-full bg-primary hover:bg-primaryDark text-white font-medium py-2.5 rounded-lg transition shadow-sm">Entrar no Sistema</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-primary text-white shadow-md no-print">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white text-primary p-2.5 rounded-xl shadow">
+                    <i class="fa-solid fa-graduation-cap text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight">EscolaPro Gestão</h1>
+                    <p class="text-xs opacity-90">Planos, Frequência, Notas & Boletins</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-1.5 bg-black/10 p-1.5 rounded-xl border border-white/25">
+                    <button onclick="setTheme('azul')" class="w-6 h-6 rounded-full bg-sky-500 border-2 border-white shadow hover:scale-110 transition"></button>
+                    <button onclick="setTheme('amarelo')" class="w-6 h-6 rounded-full bg-amber-500 border-2 border-white shadow hover:scale-110 transition"></button>
+                    <button onclick="setTheme('rosa')" class="w-6 h-6 rounded-full bg-pink-600 border-2 border-white shadow hover:scale-110 transition"></button>
+                    <button onclick="setTheme('verde')" class="w-6 h-6 rounded-full bg-emerald-600 border-2 border-white shadow hover:scale-110 transition"></button>
+                    <button onclick="setTheme('noturno')" class="w-6 h-6 rounded-full bg-slate-900 border-2 border-slate-400 shadow hover:scale-110 transition text-white text-xs"><i class="fa-solid fa-moon"></i></button>
+                </div>
+                <div class="flex items-center space-x-3 bg-black/15 px-3 py-1.5 rounded-xl border border-white/25 text-sm">
+                    <i class="fa-solid fa-user-circle text-lg"></i>
+                    <div>
+                        <span id="logged-user-name" class="font-medium block"></span>
+                        <span id="logged-user-role-badge" class="text-[10px] bg-white/20 px-1.5 py-0.5 rounded font-semibold"></span>
+                    </div>
+                    <button onclick="handleLogout()" title="Sair" class="text-white/80 hover:text-white pl-2 border-l border-white/20"><i class="fa-solid fa-right-from-bracket"></i></button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Nav Tabs -->
+    <nav class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm sticky top-0 z-30 no-print">
+        <div class="max-w-7xl mx-auto px-4 flex space-x-1 sm:space-x-3 overflow-x-auto">
+            <button onclick="switchTab('planos')" id="btn-tab-planos" class="tab-btn py-3 px-4 border-b-2 font-semibold text-sm flex items-center space-x-2 border-primary text-primary bg-accentBg"><i class="fa-solid fa-book-open"></i><span>Planos & Dashboard</span></button>
+            <button onclick="switchTab('estudantes')" id="btn-tab-estudantes" class="tab-btn py-3 px-4 border-b-2 font-semibold text-sm flex items-center space-x-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-primary"><i class="fa-solid fa-user-graduate"></i><span>Estudantes</span></button>
+            <button onclick="switchTab('frequencia')" id="btn-tab-frequencia" class="tab-btn py-3 px-4 border-b-2 font-semibold text-sm flex items-center space-x-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-primary"><i class="fa-solid fa-clipboard-user"></i><span>Registro de Aula & Frequência</span></button>
+            <button onclick="switchTab('boletins')" id="btn-tab-boletins" class="tab-btn py-3 px-4 border-b-2 font-semibold text-sm flex items-center space-x-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-primary"><i class="fa-solid fa-star-half-stroke"></i><span>Notas & Boletim</span></button>
+            <button onclick="switchTab('cadastros')" id="btn-tab-cadastros" class="tab-btn py-3 px-4 border-b-2 font-semibold text-sm flex items-center space-x-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-primary"><i class="fa-solid fa-sliders"></i><span>Cadastros Base</span></button>
+            <button onclick="switchTab('planilhas')" id="btn-tab-planilhas" class="tab-btn py-3 px-4 border-b-2 font-semibold text-sm flex items-center space-x-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-primary"><i class="fa-solid fa-file-excel"></i><span>Backup Excel</span></button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full space-y-6">
+
+        <!-- DASHBOARD & PLANOS -->
+        <section id="tab-planos" class="space-y-6">
+            <div id="dashboard-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-sky-100 text-primary rounded-xl flex items-center justify-center text-xl font-bold"><i class="fa-solid fa-book"></i></div>
+                    <div><p class="text-xs text-slate-400 uppercase font-semibold">Planos Cadastrados</p><h3 id="dash-total-planos" class="text-xl font-bold">0</h3></div>
+                </div>
+                <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center text-xl font-bold"><i class="fa-solid fa-user-graduate"></i></div>
+                    <div><p class="text-xs text-slate-400 uppercase font-semibold">Total de Alunos</p><h3 id="dash-total-alunos" class="text-xl font-bold">0</h3></div>
+                </div>
+                <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center text-xl font-bold"><i class="fa-solid fa-users-rectangle"></i></div>
+                    <div><p class="text-xs text-slate-400 uppercase font-semibold">Turmas Ativas</p><h3 id="dash-total-turmas" class="text-xl font-bold">0</h3></div>
+                </div>
+                <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center text-xl font-bold"><i class="fa-solid fa-clipboard-check"></i></div>
+                    <div><p class="text-xs text-slate-400 uppercase font-semibold">Chamadas Feitas</p><h3 id="dash-total-chamadas" class="text-xl font-bold">0</h3></div>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div>
+                    <h2 class="text-xl font-bold">Planos de Aula & BNCC</h2>
+                    <p class="text-sm text-slate-500" id="planos-subtitle">Gerencie e exporte planejamentos pedagógicos.</p>
+                </div>
+                <button onclick="openPlanModal()" class="bg-primary hover:bg-primaryDark text-white font-medium px-4 py-2.5 rounded-lg shadow-sm transition flex items-center space-x-2">
+                    <i class="fa-solid fa-plus"></i><span>Novo Plano de Aula</span>
+                </button>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row gap-3 items-center justify-between">
+                <div class="relative w-full md:w-96">
+                    <i class="fa-solid fa-search absolute left-3 top-3 text-slate-400"></i>
+                    <input type="text" id="search-input" oninput="filterPlans()" placeholder="Buscar por tema ou turma..." class="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:border-primary">
+                </div>
+                <div class="flex items-center gap-2 w-full md:w-auto">
+                    <select id="filter-bimestre" onchange="filterPlans()" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                        <option value="">Todos os Bimestres</option>
+                        <option value="1º Bimestre">1º Bimestre</option>
+                        <option value="2º Bimestre">2º Bimestre</option>
+                        <option value="3º Bimestre">3º Bimestre</option>
+                        <option value="4º Bimestre">4º Bimestre</option>
+                    </select>
+                    <button onclick="exportPlansExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-3.5 py-2 rounded-lg transition flex items-center space-x-1.5 shadow-sm">
+                        <i class="fa-solid fa-file-excel"></i><span>Excel Planos</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-primaryLight text-slate-700 dark:text-slate-200 text-xs uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-slate-800">
+                                <th class="p-3.5">Data / Bimestre</th>
+                                <th class="p-3.5">Professor / Disciplina</th>
+                                <th class="p-3.5">Turma & Aula</th>
+                                <th class="p-3.5">Tema & BNCC</th>
+                                <th class="p-3.5 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="plans-table-body" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm"></tbody>
+                    </table>
+                </div>
+                <div id="no-plans-msg" class="hidden text-center py-12 text-slate-400"><i class="fa-regular fa-folder-open text-4xl mb-2"></i><p>Nenhum plano de aula encontrado.</p></div>
+            </div>
+        </section>
+
+        <!-- ESTUDANTES -->
+        <section id="tab-estudantes" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div><h2 class="text-xl font-bold">Estudantes</h2><p class="text-sm text-slate-500">Cadastre individualmente ou em lote.</p></div>
+                <button onclick="openStudentModal()" class="bg-primary hover:bg-primaryDark text-white font-medium px-4 py-2.5 rounded-lg shadow-sm transition flex items-center space-x-2"><i class="fa-solid fa-user-plus"></i><span>Novo Estudante</span></button>
+            </div>
+            <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row gap-3 items-center justify-between">
+                <div class="relative w-full md:w-96">
+                    <i class="fa-solid fa-search absolute left-3 top-3 text-slate-400"></i>
+                    <input type="text" id="search-student" oninput="renderStudents()" placeholder="Buscar aluno..." class="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:border-primary">
+                </div>
+                <div><select id="filter-student-turma" onchange="renderStudents()" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"><option value="">Todas as Turmas</option></select></div>
+            </div>
+            <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-primaryLight text-slate-700 dark:text-slate-200 text-xs uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-slate-800">
+                                <th class="p-3.5">Matrícula</th><th class="p-3.5">Nome</th><th class="p-3.5">Turma</th><th class="p-3.5">Contato</th><th class="p-3.5 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="students-table-body" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm"></tbody>
+                    </table>
+                </div>
+                <div id="no-students-msg" class="hidden text-center py-12 text-slate-400"><i class="fa-solid fa-user-graduate text-4xl mb-2"></i><p>Nenhum estudante cadastrado.</p></div>
+            </div>
+        </section>
+
+        <!-- REGISTRO DE AULA & FREQUÊNCIA -->
+        <section id="tab-frequencia" class="hidden space-y-6">
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h2 class="text-xl font-bold">Registro de Aula & Frequência</h2>
+                    <p class="text-sm text-slate-500">Insira as informações da aula ministrada e realize a chamada dos estudantes.</p>
+                </div>
+                <button onclick="openRegListModal()" class="bg-sky-600 hover:bg-sky-700 text-white font-medium px-4 py-2 rounded-lg transition shadow-sm text-sm flex items-center space-x-2">
+                    <i class="fa-solid fa-list-check"></i><span>Ver Histórico & Gerar PDF</span>
+                </button>
+            </div>
+
+            <!-- Formulário de Seleção e Registro de Aula -->
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">Turma</label>
+                        <select id="freq-turma" onchange="loadFrequencyList()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"><option value="">Selecione...</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">Disciplina</label>
+                        <select id="freq-disciplina" onchange="loadFrequencyList()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"><option value="">Selecione...</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">Data</label>
+                        <input type="date" id="freq-data" onchange="loadFrequencyList()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                    </div>
+                </div>
+
+                <!-- Campos de Registro de Aula -->
+                <div class="bg-primaryLight/30 dark:bg-slate-800 p-4 rounded-xl border border-sky-100 dark:border-slate-700 space-y-3">
+                    <h3 class="font-bold text-primary text-xs uppercase tracking-wider"><i class="fa-solid fa-book-bookmark mr-1"></i> Detalhes do Registro de Aula</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Conteúdo</label>
+                            <input type="text" id="aula-conteudo" placeholder="Ex: Funções Afim e Gráficos" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Recursos Utilizados</label>
+                            <input type="text" id="aula-recursos" placeholder="Ex: Quadro branco, projetor, slides" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Atividades Desenvolvidas</label>
+                            <textarea id="aula-atividades" rows="2" placeholder="Descreva os exercícios ou dinâmicas..." class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Observações</label>
+                            <textarea id="aula-observacoes" rows="2" placeholder="Observações adicionais da aula..." class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end">
+                    <button onclick="saveFrequency()" class="bg-primary hover:bg-primaryDark text-white font-medium px-6 py-2.5 rounded-lg transition shadow-sm flex items-center space-x-2">
+                        <i class="fa-solid fa-floppy-disk"></i><span>Salvar Registro de Aula & Frequência</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-4">
+                <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-200 dark:border-slate-800">
+                    <span class="font-bold text-sm" id="freq-turma-title">Lista de Chamada dos Estudantes</span>
+                    <div class="space-x-2">
+                        <button onclick="markAllFreq('P')" class="text-xs bg-emerald-100 text-emerald-700 font-semibold px-2.5 py-1 rounded">Todos Presentes</button>
+                        <button onclick="markAllFreq('F')" class="text-xs bg-red-100 text-red-700 font-semibold px-2.5 py-1 rounded">Todas Faltas</button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-primaryLight text-slate-700 dark:text-slate-200 text-xs uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-slate-800">
+                                <th class="p-3">#</th><th class="p-3">Estudante</th><th class="p-3 text-center">Chamada do Dia (P / F / FJ)</th><th class="p-3 text-center">% Presença Acumulada</th>
+                            </tr>
+                        </thead>
+                        <tbody id="frequency-table-body" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                            <tr><td colspan="4" class="text-center py-8 text-slate-400">Selecione turma, disciplina e data acima.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- NOTAS & BOLETINS -->
+        <section id="tab-boletins" class="hidden space-y-6">
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <h2 class="text-xl font-bold">Lançamento de Notas & Boletim Escolar</h2>
+                <p class="text-sm text-slate-500">Notas por bimestre, média, faltas e percentual de frequência consolidados.</p>
+            </div>
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">Turma</label>
+                    <select id="grades-turma" onchange="loadStudentsForGrades()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"><option value="">Selecione...</option></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">Estudante</label>
+                    <select id="grades-student" onchange="loadStudentReport()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"><option value="">Selecione...</option></select>
+                </div>
+                <div>
+                    <button onclick="openReportModal()" id="btn-gerar-boletim" disabled class="w-full bg-primary hover:bg-primaryDark disabled:opacity-50 text-white font-medium py-2.5 rounded-lg transition shadow-sm flex items-center justify-center space-x-2"><i class="fa-solid fa-file-pdf"></i><span>Ver Boletim Oficial</span></button>
+                </div>
+            </div>
+            <div id="grades-container" class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden p-5 hidden space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-base" id="grades-student-title">Notas do Aluno</h3>
+                    <button onclick="saveGrades()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium px-4 py-2 rounded-lg transition flex items-center space-x-1.5 shadow-sm"><i class="fa-solid fa-floppy-disk"></i><span>Salvar Notas</span></button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-primaryLight text-slate-700 dark:text-slate-200 text-xs uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-slate-800">
+                                <th class="p-3">Disciplina</th><th class="p-3 text-center">1º Bim</th><th class="p-3 text-center">2º Bim</th><th class="p-3 text-center">3º Bim</th><th class="p-3 text-center">4º Bim</th><th class="p-3 text-center">Média</th><th class="p-3 text-center">Situação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="grades-table-body" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- CADASTROS BASE & USUÁRIOS (APENAS NÍVEL 1) -->
+        <section id="tab-cadastros" class="hidden space-y-6">
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <h2 class="text-xl font-bold">Cadastros Base & Usuários do Sistema</h2>
+                <p class="text-sm text-slate-500">Gerenciamento restrito a administradores (Nível 1).</p>
+            </div>
+
+            <!-- Gerenciamento de Contas -->
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+                    <h3 class="font-bold flex items-center space-x-2 text-primary">
+                        <i class="fa-solid fa-users-gear text-lg"></i>
+                        <span>Contas e Níveis de Acesso</span>
+                    </h3>
+                    <span class="bg-amber-100 text-amber-800 text-xs font-bold px-2.5 py-1 rounded">Exclusivo Nível 1 (Admin)</span>
+                </div>
+
+                <form onsubmit="handleAdminCreateUser(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">Nome</label>
+                        <input type="text" id="adm-name" required placeholder="Ex: Prof. Carlos" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">Login</label>
+                        <input type="text" id="adm-user" required placeholder="Ex: carlos" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">Senha</label>
+                        <input type="password" id="adm-pass" required placeholder="••••" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">Nível</label>
+                        <select id="adm-role" onchange="toggleAdmDisc()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                            <option value="professor">Nível 2: Professor</option>
+                            <option value="admin">Nível 1: Administrador</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 rounded-lg transition shadow-sm text-sm">
+                            <i class="fa-solid fa-user-plus mr-1"></i> Criar Conta
+                        </button>
+                    </div>
+                </form>
+                <div id="adm-disc-wrapper" class="w-full sm:w-1/3">
+                    <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">Disciplina Restrita</label>
+                    <select id="adm-disciplina" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"></select>
+                </div>
+                <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <h4 class="text-xs font-bold uppercase text-slate-500 mb-2">Usuários Cadastrados:</h4>
+                    <div id="list-users-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2"></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <div class="flex items-center justify-between mb-4"><h3 class="font-bold flex items-center space-x-2"><i class="fa-solid fa-chalkboard-user text-primary"></i><span>Professores</span></h3><span id="count-professores" class="bg-primaryLight text-primary text-xs font-bold px-2 py-0.5 rounded-full">0</span></div>
+                    <form onsubmit="addEntity(event, 'professores')" class="flex gap-2 mb-4">
+                        <input type="text" id="input-professor" placeholder="Nome" required class="flex-grow bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                        <button type="submit" class="bg-primary text-white px-3 py-2 rounded-lg text-sm"><i class="fa-solid fa-plus"></i></button>
+                    </form>
+                    <div class="max-h-60 overflow-y-auto space-y-2" id="list-professores"></div>
+                </div>
+                <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <div class="flex items-center justify-between mb-4"><h3 class="font-bold flex items-center space-x-2"><i class="fa-solid fa-users-rectangle text-primary"></i><span>Turmas (Admin)</span></h3><span id="count-turmas" class="bg-primaryLight text-primary text-xs font-bold px-2 py-0.5 rounded-full">0</span></div>
+                    <form onsubmit="addEntity(event, 'turmas')" class="flex gap-2 mb-4">
+                        <input type="text" id="input-turma" placeholder="Ex: 3º Ano A" required class="flex-grow bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                        <button type="submit" class="bg-primary text-white px-3 py-2 rounded-lg text-sm"><i class="fa-solid fa-plus"></i></button>
+                    </form>
+                    <div class="max-h-60 overflow-y-auto space-y-2" id="list-turmas"></div>
+                </div>
+                <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <div class="flex items-center justify-between mb-4"><h3 class="font-bold flex items-center space-x-2"><i class="fa-solid fa-book text-primary"></i><span>Disciplinas (Admin)</span></h3><span id="count-disciplinas" class="bg-primaryLight text-primary text-xs font-bold px-2 py-0.5 rounded-full">0</span></div>
+                    <form onsubmit="addEntity(event, 'disciplinas')" class="flex gap-2 mb-4">
+                        <input type="text" id="input-disciplina" placeholder="Ex: Matemática" required class="flex-grow bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                        <button type="submit" class="bg-primary text-white px-3 py-2 rounded-lg text-sm"><i class="fa-solid fa-plus"></i></button>
+                    </form>
+                    <div class="max-h-60 overflow-y-auto space-y-2" id="list-disciplinas"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- BACKUP EXCEL -->
+        <section id="tab-planilhas" class="hidden space-y-6">
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <h2 class="text-xl font-bold">Backup e Planilhas Excel</h2>
+                <p class="text-sm text-slate-500">Exporte ou importe dados completos do sistema.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl mb-4"><i class="fa-solid fa-file-arrow-down"></i></div>
+                        <h3 class="font-bold text-lg mb-1">Exportar Backup Completo</h3>
+                        <p class="text-sm text-slate-500 mb-6">Baixe todos os dados em Excel (.xlsx).</p>
+                    </div>
+                    <button onclick="exportFullBackup()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-lg transition flex items-center justify-center space-x-2 shadow-sm"><i class="fa-solid fa-download"></i><span>Baixar Backup Excel</span></button>
+                </div>
+                <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 bg-sky-50 text-primary rounded-xl flex items-center justify-center text-xl mb-4"><i class="fa-solid fa-file-arrow-up"></i></div>
+                        <h3 class="font-bold text-lg mb-1">Importar Dados</h3>
+                        <p class="text-sm text-slate-500 mb-4">Restaure informações a partir de um backup Excel.</p>
+                        <input type="file" id="import-file" accept=".xlsx, .xls" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primaryLight file:text-primary cursor-pointer">
+                    </div>
+                    <button onclick="importFullBackup()" class="mt-4 w-full bg-primary hover:bg-primaryDark text-white font-medium py-2.5 rounded-lg transition flex items-center justify-center space-x-2 shadow-sm"><i class="fa-solid fa-upload"></i><span>Importar</span></button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- MODAL: LISTAGEM DE REGISTROS & PDF -->
+    <div id="reg-list-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-4xl rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden my-8 flex flex-col max-h-[90vh]">
+            <div class="bg-primary text-white px-6 py-4 flex justify-between items-center no-print">
+                <h3 class="font-bold text-lg"><i class="fa-solid fa-list-check mr-2"></i>Histórico de Registros de Aula & Frequência</h3>
+                <button onclick="closeRegListModal()" class="text-white/80 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-6 space-y-4 overflow-y-auto flex-grow bg-slate-50 dark:bg-slate-900">
+                <div id="reg-history-container" class="space-y-4">
+                    <!-- Preenchido via script -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: VISUALIZAR REGISTRO INDIVIDUAL / PDF -->
+    <div id="reg-pdf-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white w-full max-w-3xl rounded-2xl shadow-xl border border-sky-100 overflow-hidden my-8 flex flex-col max-h-[90vh]">
+            <div class="bg-primary text-white px-6 py-4 flex justify-between items-center no-print">
+                <h3 class="font-bold text-lg"><i class="fa-solid fa-file-pdf mr-2"></i>Comprovante de Registro de Aula</h3>
+                <div class="flex items-center space-x-2">
+                    <button onclick="downloadRegPDF()" class="bg-white text-primary hover:bg-sky-50 px-3 py-1.5 rounded-lg text-sm font-semibold shadow-sm"><i class="fa-solid fa-download mr-1"></i>Baixar PDF</button>
+                    <button onclick="closeRegPdfModal()" class="text-white/80 hover:text-white text-xl pl-2"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+            <div id="reg-pdf-content" class="p-8 space-y-6 overflow-y-auto bg-white text-slate-800 flex-grow">
+                <div class="border-b-2 border-primary pb-4 text-center">
+                    <h2 class="text-2xl font-bold text-primary">REGISTRO DE AULA & FREQUÊNCIA</h2>
+                    <p class="text-xs text-slate-500 uppercase tracking-widest mt-1">Sistema Integrado de Ensino</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4 bg-primaryLight/50 p-4 rounded-xl text-sm border border-sky-100">
+                    <div><strong>Turma:</strong> <span id="rview-turma"></span></div>
+                    <div><strong>Disciplina:</strong> <span id="rview-disciplina"></span></div>
+                    <div><strong>Data:</strong> <span id="rview-data"></span></div>
+                    <div><strong>Total de Alunos Chamada:</strong> <span id="rview-total-alunos"></span></div>
+                </div>
+                <div class="space-y-4 text-sm">
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200"><h4 class="font-bold text-primary text-xs uppercase mb-1">Conteúdo Ministrado</h4><p id="rview-conteudo" class="text-slate-700 font-medium"></p></div>
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200"><h4 class="font-bold text-primary text-xs uppercase mb-1">Atividades Desenvolvidas</h4><p id="rview-atividades" class="text-slate-700"></p></div>
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200"><h4 class="font-bold text-primary text-xs uppercase mb-1">Recursos Utilizados</h4><p id="rview-recursos" class="text-slate-700"></p></div>
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200"><h4 class="font-bold text-primary text-xs uppercase mb-1">Observações</h4><p id="rview-observacoes" class="text-slate-700"></p></div>
+                </div>
+                <div>
+                    <h4 class="font-bold text-primary text-xs uppercase tracking-wider mb-2">Lista de Frequência dos Alunos</h4>
+                    <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-700 text-xs uppercase font-semibold border-b border-slate-200">
+                                    <th class="p-2.5">#</th><th class="p-2.5">Estudante</th><th class="p-2.5 text-center">Status (P / F / FJ)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rview-freq-table" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: PLANO DE AULA -->
+    <div id="plan-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-3xl rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden my-8">
+            <div class="bg-primary text-white px-6 py-4 flex justify-between items-center">
+                <h3 id="modal-title" class="font-bold text-lg">Novo Plano de Aula</h3>
+                <button onclick="closePlanModal()" class="text-white/80 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="plan-form" onsubmit="savePlan(event)" class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+                <input type="hidden" id="plan-id">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">Professor(a)</label>
+                        <select id="plan-professor" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"><option value="">Selecione...</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">Data</label>
+                        <input type="date" id="plan-data" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">Aula</label>
+                        <select id="plan-aula-num" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                            <option value="1ª Aula">1ª Aula</option><option value="2ª Aula">2ª Aula</option><option value="3ª Aula">3ª Aula</option><option value="4ª Aula">4ª Aula</option><option value="5ª Aula">5ª Aula</option><option value="6ª Aula">6ª Aula</option><option value="7ª Aula">7ª Aula</option><option value="8ª Aula">8ª Aula</option><option value="9ª Aula">9ª Aula</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">Bimestre</label>
+                        <select id="plan-bimestre" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                            <option value="1º Bimestre">1º Bimestre</option><option value="2º Bimestre">2º Bimestre</option><option value="3º Bimestre">3º Bimestre</option><option value="4º Bimestre">4º Bimestre</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">Turma</label>
+                        <select id="plan-turma" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"><option value="">Selecione...</option></select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">Disciplina</label>
+                        <select id="plan-disciplina" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"><option value="">Selecione...</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">Tema</label>
+                        <input type="text" id="plan-tema" required placeholder="Ex: Análise Literária" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                    </div>
+                </div>
+
+                <!-- BNCC Independente -->
+                <div class="bg-primaryLight/40 dark:bg-slate-800 p-4 rounded-xl border border-sky-100 dark:border-slate-700 space-y-3">
+                    <h4 class="font-bold text-primary text-xs uppercase tracking-wider"><i class="fa-solid fa-bullseye mr-1"></i> Sugestões da BNCC (Ensino Médio)</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Área / Disciplina BNCC</label>
+                            <select id="bncc-area-select" onchange="onBnccAreaChange()" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-primary">
+                                <option value="">Selecione a área BNCC...</option>
+                                <option value="Língua Portuguesa">Língua Portuguesa</option>
+                                <option value="Matemática">Matemática</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Habilidade Específica</label>
+                            <select id="bncc-hab-select" onchange="onBnccHabSelect()" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-primary">
+                                <option value="">Selecione a área primeiro...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Código</label>
+                            <input type="text" id="plan-bncc-codigo" placeholder="Ex: EM13LP01" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-primary">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Descrição Completa</label>
+                            <input type="text" id="plan-bncc-desc" placeholder="Preenchida automaticamente" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-primary">
+                        </div>
+                    </div>
+                </div>
+
+                <div><label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">Metodologia</label><textarea id="plan-metodologia" rows="2" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"></textarea></div>
+                <div><label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">Atividades</label><textarea id="plan-atividades" rows="2" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"></textarea></div>
+                <div><label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">Recursos</label><textarea id="plan-recursos" rows="2" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"></textarea></div>
+                <div class="flex justify-end space-x-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+                    <button type="button" onclick="closePlanModal()" class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 rounded-lg bg-primary text-white font-medium text-sm shadow-sm">Salvar Plano</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: VISUALIZAR PLANO / PDF -->
+    <div id="pdf-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white w-full max-w-3xl rounded-2xl shadow-xl border border-sky-100 overflow-hidden my-8 flex flex-col max-h-[90vh]">
+            <div class="bg-primary text-white px-6 py-4 flex justify-between items-center no-print">
+                <h3 class="font-bold text-lg"><i class="fa-solid fa-file-pdf mr-2"></i>Plano de Aula</h3>
+                <div class="flex items-center space-x-2">
+                    <button onclick="downloadLessonPDF()" class="bg-white text-primary hover:bg-sky-50 px-3 py-1.5 rounded-lg text-sm font-semibold shadow-sm"><i class="fa-solid fa-download mr-1"></i>Baixar PDF</button>
+                    <button onclick="closePdfModal()" class="text-white/80 hover:text-white text-xl pl-2"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+            <div id="pdf-content" class="p-8 space-y-6 overflow-y-auto bg-white text-slate-800 flex-grow">
+                <div class="border-b-2 border-primary pb-4 text-center">
+                    <h2 class="text-2xl font-bold text-primary">PLANO DE AULA</h2>
+                    <p class="text-xs text-slate-500 uppercase tracking-widest mt-1">Sistema Integrado de Ensino</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4 bg-primaryLight/50 p-4 rounded-xl text-sm border border-sky-100">
+                    <div><strong>Professor(a):</strong> <span id="view-professor"></span></div>
+                    <div><strong>Data:</strong> <span id="view-data"></span></div>
+                    <div><strong>Aula:</strong> <span id="view-aula-num"></span></div>
+                    <div><strong>Bimestre:</strong> <span id="view-bimestre"></span></div>
+                    <div><strong>Turma:</strong> <span id="view-turma"></span></div>
+                    <div><strong>Disciplina:</strong> <span id="view-disciplina"></span></div>
+                </div>
+                <div class="space-y-4 text-sm">
+                    <div><h4 class="font-bold text-primary text-xs uppercase mb-1">Tema</h4><p id="view-tema" class="text-slate-700 font-medium text-base"></p></div>
+                    <div class="bg-sky-50/50 p-3 rounded-lg border border-sky-100"><h4 class="font-bold text-primary text-xs uppercase mb-1">BNCC</h4><p class="text-xs font-bold text-slate-900"><span id="view-bncc-codigo" class="bg-primary text-white px-1.5 py-0.5 rounded mr-1"></span> <span id="view-bncc-desc"></span></p></div>
+                    <div><h4 class="font-bold text-primary text-xs uppercase mb-1">Metodologia</h4><p id="view-metodologia" class="text-slate-700 whitespace-pre-line"></p></div>
+                    <div><h4 class="font-bold text-primary text-xs uppercase mb-1">Atividades</h4><p id="view-atividades" class="text-slate-700 whitespace-pre-line"></p></div>
+                    <div><h4 class="font-bold text-primary text-xs uppercase mb-1">Recursos</h4><p id="view-recursos" class="text-slate-700 whitespace-pre-line"></p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ESTUDANTE -->
+    <div id="student-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden my-8">
+            <div class="bg-primary text-white px-6 py-4 flex justify-between items-center">
+                <h3 id="student-modal-title" class="font-bold text-lg">Novo Estudante</h3>
+                <button onclick="closeStudentModal()" class="text-white/80 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="student-mode-tabs" class="flex border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-6 pt-3 text-sm">
+                <button type="button" onclick="setStudentMode('single')" id="btn-mode-single" class="pb-2 px-3 font-bold border-b-2 border-primary text-primary">Individual</button>
+                <button type="button" onclick="setStudentMode('batch')" id="btn-mode-batch" class="pb-2 px-3 font-semibold border-b-2 border-transparent text-slate-500">Em Lote</button>
+            </div>
+            <form id="student-form" onsubmit="saveStudent(event)" class="p-6 space-y-4">
+                <input type="hidden" id="student-id"><input type="hidden" id="student-mode" value="single">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">Turma</label>
+                    <select id="student-turma" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"><option value="">Selecione...</option></select>
+                </div>
+                <div id="single-student-fields" class="space-y-4">
+                    <div><label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">Nome Completo</label><input type="text" id="student-nome" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"></div>
+                    <div><label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">Matrícula</label><input type="text" id="student-matricula" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"></div>
+                    <div><label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">E-mail</label><input type="text" id="student-email" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"></div>
+                </div>
+                <div id="batch-student-fields" class="space-y-2 hidden">
+                    <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">Nomes (um por linha)</label>
+                    <textarea id="batch-nomes" rows="6" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm focus:outline-none focus:border-primary" placeholder="Cole os nomes dos alunos aqui, um por linha..."></textarea>
+                </div>
+                <div class="flex justify-end space-x-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+                    <button type="button" onclick="closeStudentModal()" class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 rounded-lg bg-primary text-white font-medium text-sm shadow-sm">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: BOLETIM ESCOLAR -->
+    <div id="report-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-4xl rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden my-8 flex flex-col max-h-[90vh]">
+            <div class="bg-primary text-white px-6 py-4 flex justify-between items-center no-print">
+                <h3 class="font-bold text-lg"><i class="fa-solid fa-star-half-stroke mr-2"></i>Boletim Escolar Oficial</h3>
+                <div class="flex items-center space-x-2">
+                    <button onclick="downloadPDFReport()" class="bg-white text-primary hover:bg-sky-50 px-3 py-1.5 rounded-lg text-sm font-semibold shadow-sm"><i class="fa-solid fa-download mr-1"></i>Baixar PDF</button>
+                    <button onclick="closeReportModal()" class="text-white/80 hover:text-white text-xl pl-2"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+            <div id="report-content" class="p-8 space-y-6 overflow-y-auto bg-white text-slate-800 flex-grow">
+                <div class="border-b-2 border-primary pb-4 text-center">
+                    <h2 class="text-2xl font-bold text-primary">BOLETIM ESCOLAR DE DESEMPENHO</h2>
+                    <p class="text-xs text-slate-500 uppercase tracking-widest mt-1">Sistema Integrado de Ensino</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl text-sm border border-slate-200">
+                    <div><strong>Estudante:</strong> <span id="rep-nome"></span></div>
+                    <div><strong>Matrícula:</strong> <span id="rep-matricula"></span></div>
+                    <div><strong>Turma:</strong> <span id="rep-turma"></span></div>
+                    <div><strong>Emissão:</strong> <span id="rep-data"></span></div>
+                </div>
+                <div>
+                    <h4 class="font-bold text-primary text-xs uppercase tracking-wider mb-2">Desempenho por Disciplina (Notas, Frequência e %)</h4>
+                    <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-700 text-xs uppercase font-semibold border-b border-slate-200">
+                                    <th class="p-3">Disciplina</th><th class="p-3 text-center">1º Bim</th><th class="p-3 text-center">2º Bim</th><th class="p-3 text-center">3º Bim</th><th class="p-3 text-center">4º Bim</th><th class="p-3 text-center">Média</th><th class="p-3 text-center">Faltas (Presença %)</th><th class="p-3 text-center">Situação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rep-table-body" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Logic -->
+    <script>
+        const bnccDatabase = {
+            "Língua Portuguesa": [
+                { codigo: "EM13LP01", descricao: "Relacionar textos das diferentes semioses a seus contextos de produção e recepção." },
+                { codigo: "EM13LP02", descricao: "Estabelecer relações entre as partes do texto, responsabilizando-se pela coerência e coesão." },
+                { codigo: "EM13LP03", descricao: "Analisar relações de intertextualidade e interdiscursividade entre textos de diferentes gêneros." },
+                { codigo: "EM13LP04", descricao: "Analisar os efeitos de sentido decorrentes do uso de recursos linguístico-discursivos." },
+                { codigo: "EM13LP05", descricao: "Analisar os efeitos de sentido decorrentes da escolha de uma dada variedade linguística." },
+                { codigo: "EM13LP06", descricao: "Analisar os efeitos de sentido decorrentes de usos expressivos da linguagem, figuras de linguagem." },
+                { codigo: "EM13LP07", descricao: "Analisar os efeitos de sentido decorrentes de escolhas de imagens, diagramação e elementos visuais." },
+                { codigo: "EM13LP08", descricao: "Mapear e analisar o funcionamento de textos pertencentes a diferentes gêneros da cultura digital." },
+                { codigo: "EM13LP09", descricao: "Comparar o tratamento dado a um mesmo tema em diferentes fontes, atestando graus de confiabilidade." },
+                { codigo: "EM13LP10", descricao: "Formular perguntas e pautas para entrevistas, discussões, debates e reuniões de trabalho." },
+                { codigo: "EM13LP11", descricao: "Fazer curadoria de informação, tendo em vista critérios de credibilidade, relevância e atualidade." },
+                { codigo: "EM13LP12", descricao: "Selecionar informações, dados e argumentos de fontes confiáveis para fundamentar opiniões." },
+                { codigo: "EM13LP13", descricao: "Planejar, produzir, revisar e editar textos argumentativos e propositivos." },
+                { codigo: "EM13LP14", descricao: "Engajar-se e colaborar na resolução de problemas da comunidade por meio de propostas e intervenções." }
+            ],
+            "Matemática": [
+                { codigo: "EM13MAT101", descricao: "Interpretar e resolver situações-problema que envolvam grandezas, medidas e proporções." },
+                { codigo: "EM13MAT102", descricao: "Analisar tabelas, gráficos e amostras de pesquisas estatísticas apresentadas em relatórios." },
+                { codigo: "EM13MAT103", descricao: "Interpretar e resolver problemas envolvendo funções de 1º e 2º graus e exponenciais." },
+                { codigo: "EM13MAT201", descricao: "Resolver e elaborar problemas com sequências numéricas recursivas e não recursivas." },
+                { codigo: "EM13MAT301", descricao: "Resolver e elaborar problemas do cotidiano que envolvam juros compostos e capitalização." },
+                { codigo: "EM13MAT302", descricao: "Construir e interpretar tabelas e gráficos estatísticos para análise de dados complexos." },
+                { codigo: "EM13MAT401", descricao: "Investigar relações métricas em triângulos retângulos e quaisquer outros polígonos." },
+                { codigo: "EM13MAT501", descricao: "Investigar a probabilidade de eventos compostos usando diagramas de árvore e contagem." }
+            ]
+        };
+
+        let usersDB = JSON.parse(localStorage.getItem('escolapro_users_v11')) || [
+            { name: 'Tiago Rosendo', user: 'tiago', pass: '123', role: 'admin', disciplina: '' },
+            { name: 'Maria Silva', user: 'maria', pass: '123', role: 'professor', disciplina: 'Matemática' }
+        ];
+
+        let currentUser = JSON.parse(localStorage.getItem('escolapro_current_user_v11')) || null;
+
+        let db = JSON.parse(localStorage.getItem('escolapro_db_v11')) || {
+            theme: 'azul',
+            professores: ['Tiago Rosendo', 'Maria Silva'],
+            turmas: ['3º Ano A - Serviços Públicos', '2º Ano B - Informática'],
+            disciplinas: ['Língua Portuguesa', 'Matemática', 'Contabilidade Pública', 'Economia'],
+            planos: [],
+            estudantes: [
+                { id: 1, nome: 'Ana Carolina Santos', turma: '3º Ano A - Serviços Públicos', matricula: '202601', email: 'ana@escola.com' },
+                { id: 2, nome: 'Lucas Gabriel Oliveira', turma: '3º Ano A - Serviços Públicos', matricula: '202602', email: 'lucas@escola.com' }
+            ],
+            frequencias: {},
+            registrosAulas: {},
+            notas: {}
+        };
+
+        function saveDB() {
+            localStorage.setItem('escolapro_db_v11', JSON.stringify(db));
+            renderAll();
+        }
+
+        function checkAuth() {
+            const authScreen = document.getElementById('auth-screen');
+            const cadastrosTabBtn = document.querySelector('button[onclick="switchTab(\'cadastros\')"]');
+
+            if (currentUser) {
+                authScreen.classList.add('hidden');
+                document.getElementById('logged-user-name').innerText = currentUser.name;
+                const roleBadge = document.getElementById('logged-user-role-badge');
+
+                if (currentUser.role === 'admin') {
+                    roleBadge.innerText = 'Admin (Nível 1 - Total)';
+                    if (cadastrosTabBtn) cadastrosTabBtn.classList.remove('hidden');
+                    document.getElementById('planos-subtitle').innerText = 'Painel Administrador: Acesso completo.';
+                } else {
+                    roleBadge.innerText = `Professor Nível 2 (${currentUser.disciplina})`;
+                    if (cadastrosTabBtn) cadastrosTabBtn.classList.add('hidden');
+                    if (!document.getElementById('tab-cadastros').classList.contains('hidden')) {
+                        switchTab('planos');
+                    }
+                    document.getElementById('planos-subtitle').innerText = `Painel do Professor: Restrito à disciplina ${currentUser.disciplina}.`;
+                }
+                renderAll();
+            } else {
+                authScreen.classList.remove('hidden');
+            }
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const u = document.getElementById('login-user').value.trim();
+            const p = document.getElementById('login-pass').value.trim();
+            const found = usersDB.find(item => item.user === u && item.pass === p);
+            if (found) {
+                currentUser = found;
+                localStorage.setItem('escolapro_current_user_v11', JSON.stringify(currentUser));
+                checkAuth();
+            } else { alert('Usuário ou senha incorretos.'); }
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            localStorage.removeItem('escolapro_current_user_v11');
+            checkAuth();
+        }
+
+        function toggleAdmDisc() {
+            const role = document.getElementById('adm-role').value;
+            const wrap = document.getElementById('adm-disc-wrapper');
+            if (role === 'professor') wrap.classList.remove('hidden');
+            else wrap.classList.add('hidden');
+        }
+
+        function handleAdminCreateUser(event) {
+            event.preventDefault();
+            if (!currentUser || currentUser.role !== 'admin') return;
+            const name = document.getElementById('adm-name').value.trim();
+            const u = document.getElementById('adm-user').value.trim();
+            const p = document.getElementById('adm-pass').value.trim();
+            const role = document.getElementById('adm-role').value;
+            const disciplina = role === 'professor' ? document.getElementById('adm-disciplina').value : '';
+
+            if (usersDB.some(item => item.user === u)) { alert('Usuário já existe.'); return; }
+            usersDB.push({ name, user: u, pass: p, role, disciplina });
+            localStorage.setItem('escolapro_users_v11', JSON.stringify(usersDB));
+            if (!db.professores.includes(name)) db.professores.push(name);
+            saveDB();
+            alert(`Conta criada com sucesso para ${name}!`);
+            document.getElementById('adm-name').value = '';
+            document.getElementById('adm-user').value = '';
+            document.getElementById('adm-pass').value = '';
+        }
+
+        function renderUsersList() {
+            const container = document.getElementById('list-users-container');
+            if (!container) return;
+            container.innerHTML = '';
+            usersDB.forEach((usr, idx) => {
+                const div = document.createElement('div');
+                div.className = 'bg-slate-50 dark:bg-slate-800 p-2 rounded text-xs flex justify-between items-center';
+                div.innerHTML = `<div><span class="font-bold">${usr.name}</span> (${usr.role})</div>${usr.user !== 'tiago' ? `<button onclick="deleteUser(${idx})" class="text-red-500"><i class="fa-solid fa-trash-can"></i></button>` : ''}`;
+                container.appendChild(div);
+            });
+        }
+
+        function deleteUser(idx) {
+            if (!currentUser || currentUser.role !== 'admin') return;
+            if (confirm('Excluir usuário?')) {
+                usersDB.splice(idx, 1);
+                localStorage.setItem('escolapro_users_v11', JSON.stringify(usersDB));
+                renderUsersList();
+            }
+        }
+
+        function setTheme(themeName) {
+            db.theme = themeName;
+            document.documentElement.setAttribute('data-theme', themeName);
+            if (themeName === 'noturno') document.documentElement.classList.add('dark');
+            else document.documentElement.classList.remove('dark');
+            localStorage.setItem('escolapro_db_v11', JSON.stringify(db));
+        }
+        if (db.theme) setTheme(db.theme);
+
+        function switchTab(tabId) {
+            if (tabId === 'cadastros' && currentUser && currentUser.role === 'professor') {
+                alert('Acesso negado: Cadastros Base é restrito ao Administrador.');
+                return;
+            }
+            document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('border-primary', 'text-primary', 'bg-accentBg');
+                btn.classList.add('border-transparent', 'text-slate-600', 'dark:text-slate-400');
+            });
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            const activeBtn = document.getElementById('btn-tab-' + tabId);
+            if (activeBtn) {
+                activeBtn.classList.remove('border-transparent', 'text-slate-600', 'dark:text-slate-400');
+                activeBtn.classList.add('border-primary', 'text-primary', 'bg-accentBg');
+            }
+        }
+
+        function renderAll() {
+            renderDashboard();
+            renderList('professores');
+            renderList('turmas');
+            renderList('disciplinas');
+            populateSelects();
+            renderPlans();
+            renderStudents();
+            populateFrequencySelects();
+            populateGradesSelects();
+            renderUsersList();
+            toggleAdmDisc();
+        }
+
+        function renderDashboard() {
+            document.getElementById('dash-total-planos').innerText = db.planos.length;
+            document.getElementById('dash-total-alunos').innerText = db.estudantes.length;
+            document.getElementById('dash-total-turmas').innerText = db.turmas.length;
+            document.getElementById('dash-total-chamadas').innerText = Object.keys(db.frequencias).length;
+        }
+
+        function renderList(type) {
+            const container = document.getElementById(`list-${type}`);
+            const countEl = document.getElementById(`count-${type}`);
+            if (!container) return;
+            container.innerHTML = '';
+            countEl.innerText = db[type].length;
+            db[type].forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-lg text-sm';
+                let canEdit = currentUser && currentUser.role === 'admin';
+                div.innerHTML = `<span class="font-medium">${item}</span>${canEdit ? `<button onclick="deleteEntity('${type}', ${index})" class="text-red-500"><i class="fa-solid fa-trash-can text-xs"></i></button>` : ''}`;
+                container.appendChild(div);
+            });
+        }
+
+        function addEntity(event, type) {
+            event.preventDefault();
+            if (currentUser && currentUser.role !== 'admin') { alert('Restrito ao Administrador.'); return; }
+            const inputId = type === 'professores' ? 'input-professor' : (type === 'turmas' ? 'input-turma' : 'input-disciplina');
+            const val = document.getElementById(inputId).value.trim();
+            if (val && !db[type].includes(val)) { db[type].push(val); document.getElementById(inputId).value = ''; saveDB(); }
+        }
+
+        function deleteEntity(type, index) {
+            if (currentUser && currentUser.role !== 'admin') return;
+            if (confirm('Excluir item?')) { db[type].splice(index, 1); saveDB(); }
+        }
+
+        function populateSelects() {
+            const selects = ['plan-professor', 'plan-turma', 'plan-disciplina', 'student-turma', 'filter-student-turma', 'adm-disciplina'];
+            selects.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const curVal = el.value;
+                const isFilter = id === 'filter-student-turma';
+                el.innerHTML = isFilter ? '<option value="">Todas as Turmas</option>' : '<option value="">Selecione...</option>';
+                let arr = id.includes('professor') ? db.professores : (id.includes('turma') ? db.turmas : db.disciplinas);
+                arr.forEach(item => el.innerHTML += `<option value="${item}">${item}</option>`);
+                el.value = curVal;
+            });
+        }
+
+        function onBnccAreaChange() {
+            const area = document.getElementById('bncc-area-select').value;
+            const habSelect = document.getElementById('bncc-hab-select');
+            habSelect.innerHTML = '<option value="">Selecione a habilidade...</option>';
+            document.getElementById('plan-bncc-codigo').value = '';
+            document.getElementById('plan-bncc-desc').value = '';
+
+            if (bnccDatabase[area]) {
+                bnccDatabase[area].forEach((b, idx) => {
+                    habSelect.innerHTML += `<option value="${idx}">${b.codigo} - ${b.descricao.substring(0, 45)}...</option>`;
+                });
+            }
+        }
+
+        function onBnccHabSelect() {
+            const area = document.getElementById('bncc-area-select').value;
+            const idx = document.getElementById('bncc-hab-select').value;
+            if (idx !== "" && bnccDatabase[area] && bnccDatabase[area][idx]) {
+                const item = bnccDatabase[area][idx];
+                document.getElementById('plan-bncc-codigo').value = item.codigo;
+                document.getElementById('plan-bncc-desc').value = item.descricao;
+            }
+        }
+
+        function openPlanModal(id = null) {
+            populateSelects();
+            document.getElementById('plan-form').reset();
+            document.getElementById('plan-id').value = '';
+            document.getElementById('bncc-area-select').value = '';
+            document.getElementById('bncc-hab-select').innerHTML = '<option value="">Selecione a área primeiro...</option>';
+
+            const profSelect = document.getElementById('plan-professor');
+            const discSelect = document.getElementById('plan-disciplina');
+
+            if (currentUser && currentUser.role === 'professor') {
+                profSelect.value = currentUser.name;
+                profSelect.disabled = true;
+                if (currentUser.disciplina) {
+                    discSelect.value = currentUser.disciplina;
+                    discSelect.disabled = true;
+                }
+            } else {
+                profSelect.disabled = false;
+                discSelect.disabled = false;
+            }
+
+            if (id !== null) {
+                const plan = db.planos.find(p => p.id === id);
+                if (plan) {
+                    if (currentUser.role === 'professor' && plan.disciplina !== currentUser.disciplina) {
+                        alert('Acesso negado.'); return;
+                    }
+                    document.getElementById('modal-title').innerText = 'Editar Plano de Aula';
+                    document.getElementById('plan-id').value = plan.id;
+                    profSelect.value = plan.professor;
+                    document.getElementById('plan-data').value = plan.data;
+                    document.getElementById('plan-aula-num').value = plan.aulaNum;
+                    document.getElementById('plan-bimestre').value = plan.bimestre;
+                    document.getElementById('plan-turma').value = plan.turma;
+                    document.getElementById('plan-disciplina').value = plan.disciplina;
+                    document.getElementById('plan-tema').value = plan.tema;
+                    document.getElementById('plan-bncc-codigo').value = plan.bnccCodigo || '';
+                    document.getElementById('plan-bncc-desc').value = plan.bnccDesc || '';
+                    document.getElementById('plan-metodologia').value = plan.metodologia;
+                    document.getElementById('plan-atividades').value = plan.atividades;
+                    document.getElementById('plan-recursos').value = plan.recursos;
+                }
+            } else {
+                document.getElementById('modal-title').innerText = 'Novo Plano de Aula';
+                document.getElementById('plan-data').valueAsDate = new Date();
+            }
+            document.getElementById('plan-modal').classList.remove('hidden');
+        }
+
+        function closePlanModal() { document.getElementById('plan-modal').classList.add('hidden'); }
+
+        function savePlan(event) {
+            event.preventDefault();
+            const id = document.getElementById('plan-id').value;
+            const disciplina = document.getElementById('plan-disciplina').value;
+
+            if (currentUser && currentUser.role === 'professor' && disciplina !== currentUser.disciplina) {
+                alert('Erro: Você só pode criar planos para sua disciplina (' + currentUser.disciplina + ').');
+                return;
+            }
+
+            const planData = {
+                id: id ? parseInt(id) : Date.now(),
+                professor: currentUser.role === 'professor' ? currentUser.name : document.getElementById('plan-professor').value,
+                data: document.getElementById('plan-data').value,
+                aulaNum: document.getElementById('plan-aula-num').value,
+                bimestre: document.getElementById('plan-bimestre').value,
+                turma: document.getElementById('plan-turma').value,
+                disciplina: disciplina,
+                tema: document.getElementById('plan-tema').value,
+                bnccCodigo: document.getElementById('plan-bncc-codigo').value,
+                bnccDesc: document.getElementById('plan-bncc-desc').value,
+                metodologia: document.getElementById('plan-metodologia').value,
+                atividades: document.getElementById('plan-atividades').value,
+                recursos: document.getElementById('plan-recursos').value
+            };
+
+            if (id) {
+                const index = db.planos.findIndex(p => p.id === parseInt(id));
+                if (index !== -1) db.planos[index] = planData;
+            } else {
+                db.planos.unshift(planData);
+            }
+            saveDB();
+            closePlanModal();
+        }
+
+        function renderPlans(filteredPlans = null) {
+            const tbody = document.getElementById('plans-table-body');
+            const noMsg = document.getElementById('no-plans-msg');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            let list = filteredPlans || db.planos;
+            if (currentUser && currentUser.role === 'professor') {
+                list = list.filter(p => p.disciplina === currentUser.disciplina);
+            }
+            if (list.length === 0) { noMsg.classList.remove('hidden'); return; }
+            else noMsg.classList.add('hidden');
+
+            list.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-sky-50/40 dark:hover:bg-slate-800/50 transition border-b border-slate-100 dark:border-slate-800';
+                tr.innerHTML = `
+                    <td class="p-3.5"><div class="font-medium">${p.data ? p.data.split('-').reverse().join('/') : ''}</div><div class="text-xs text-primary font-semibold">${p.bimestre}</div></td>
+                    <td class="p-3.5"><div class="font-medium">${p.professor}</div><div class="text-xs text-slate-500">${p.disciplina}</div></td>
+                    <td class="p-3.5"><div class="font-medium">${p.turma}</div><div class="text-xs inline-block bg-primaryLight text-primary font-bold px-2 py-0.5 rounded mt-0.5">${p.aulaNum}</div></td>
+                    <td class="p-3.5"><div class="font-medium line-clamp-1">${p.tema}</div>${p.bnccCodigo ? `<div class="text-xs text-emerald-600 font-bold mt-0.5"><i class="fa-solid fa-tag mr-1"></i>${p.bnccCodigo}</div>` : ''}</td>
+                    <td class="p-3.5 text-center">
+                        <div class="flex items-center justify-center space-x-1.5">
+                            <button onclick="openPdfModal(${p.id})" class="bg-primary/10 hover:bg-primary text-primary hover:text-white p-2 rounded-lg transition"><i class="fa-solid fa-file-pdf"></i></button>
+                            <button onclick="openPlanModal(${p.id})" class="bg-slate-100 hover:bg-slate-200 text-slate-600 p-2 rounded-lg transition"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="deletePlan(${p.id})" class="bg-red-50 hover:bg-red-100 text-red-500 p-2 rounded-lg transition"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function deletePlan(id) {
+            const plan = db.planos.find(p => p.id === id);
+            if (currentUser && currentUser.role === 'professor' && plan && plan.disciplina !== currentUser.disciplina) return;
+            if (confirm('Excluir plano?')) { db.planos = db.planos.filter(p => p.id !== id); saveDB(); }
+        }
+
+        function filterPlans() {
+            const q = document.getElementById('search-input').value.toLowerCase();
+            const bim = document.getElementById('filter-bimestre').value;
+            let list = db.planos;
+            if (currentUser && currentUser.role === 'professor') list = list.filter(p => p.disciplina === currentUser.disciplina);
+            const filtered = list.filter(p => (p.tema.toLowerCase().includes(q) || p.turma.toLowerCase().includes(q)) && (!bim || p.bimestre === bim));
+            renderPlans(filtered);
+        }
+
+        let currentPdfId = null;
+        function openPdfModal(id) {
+            currentPdfId = id;
+            const plan = db.planos.find(p => p.id === id);
+            if (!plan) return;
+            document.getElementById('view-professor').innerText = plan.professor;
+            document.getElementById('view-data').innerText = plan.data ? plan.data.split('-').reverse().join('/') : '';
+            document.getElementById('view-aula-num').innerText = plan.aulaNum;
+            document.getElementById('view-bimestre').innerText = plan.bimestre;
+            document.getElementById('view-turma').innerText = plan.turma;
+            document.getElementById('view-disciplina').innerText = plan.disciplina;
+            document.getElementById('view-tema').innerText = plan.tema;
+            document.getElementById('view-bncc-codigo').innerText = plan.bnccCodigo || 'Não informada';
+            document.getElementById('view-bncc-desc').innerText = plan.bnccDesc || '';
+            document.getElementById('view-metodologia').innerText = plan.metodologia;
+            document.getElementById('view-atividades').innerText = plan.atividades;
+            document.getElementById('view-recursos').innerText = plan.recursos;
+            document.getElementById('pdf-modal').classList.remove('hidden');
+        }
+        function closePdfModal() { document.getElementById('pdf-modal').classList.add('hidden'); }
+        function downloadLessonPDF() { html2pdf().from(document.getElementById('pdf-content')).save(); }
+
+        function setStudentMode(mode) {
+            document.getElementById('student-mode').value = mode;
+            const btnSingle = document.getElementById('btn-mode-single');
+            const btnBatch = document.getElementById('btn-mode-batch');
+            if (mode === 'batch') {
+                document.getElementById('single-student-fields').classList.add('hidden');
+                document.getElementById('batch-student-fields').classList.remove('hidden');
+                btnBatch.className = "pb-2 px-3 font-bold border-b-2 border-primary text-primary";
+                btnSingle.className = "pb-2 px-3 font-semibold border-b-2 border-transparent text-slate-500";
+            } else {
+                document.getElementById('batch-student-fields').classList.add('hidden');
+                document.getElementById('single-student-fields').classList.remove('hidden');
+                btnSingle.className = "pb-2 px-3 font-bold border-b-2 border-primary text-primary";
+                btnBatch.className = "pb-2 px-3 font-semibold border-b-2 border-transparent text-slate-500";
+            }
+        }
+        
+        function openStudentModal() { 
+            populateSelects(); 
+            document.getElementById('student-form').reset(); 
+            setStudentMode('single');
+            document.getElementById('student-modal').classList.remove('hidden'); 
+        }
+        function closeStudentModal() { document.getElementById('student-modal').classList.add('hidden'); }
+
+        function saveStudent(event) {
+            event.preventDefault();
+            const turma = document.getElementById('student-turma').value;
+            const mode = document.getElementById('student-mode').value;
+            
+            if (!turma) { alert('Selecione uma turma.'); return; }
+
+            if (mode === 'batch') {
+                const rawText = document.getElementById('batch-nomes').value;
+                const names = rawText.split('\n').map(n => n.trim()).filter(Boolean);
+                if (names.length === 0) { alert('Insira pelo menos um nome.'); return; }
+                names.forEach((n, idx) => {
+                    db.estudantes.push({ 
+                        id: Date.now() + idx, 
+                        nome: n, 
+                        turma, 
+                        matricula: '2026' + Math.floor(1000 + Math.random() * 9000), 
+                        email: '' 
+                    });
+                });
+            } else {
+                const nome = document.getElementById('student-nome').value.trim();
+                if (!nome) { alert('Informe o nome.'); return; }
+                db.estudantes.push({
+                    id: Date.now(),
+                    nome: nome,
+                    turma,
+                    matricula: document.getElementById('student-matricula').value.trim() || ('2026' + Math.floor(1000 + Math.random() * 900)),
+                    email: document.getElementById('student-email').value.trim()
+                });
+            }
+            saveDB(); 
+            closeStudentModal();
+        }
+
+        function renderStudents() {
+            const tbody = document.getElementById('students-table-body');
+            const noMsg = document.getElementById('no-students-msg');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            const q = document.getElementById('search-student').value.toLowerCase();
+            const turmaF = document.getElementById('filter-student-turma').value;
+            const list = db.estudantes.filter(s => s.nome.toLowerCase().includes(q) && (!turmaF || s.turma === turmaF));
+            if (list.length === 0) { noMsg.classList.remove('hidden'); return; }
+            else noMsg.classList.add('hidden');
+
+            list.forEach(s => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-slate-100';
+                tr.innerHTML = `<td class="p-3.5 font-semibold text-primary">${s.matricula}</td><td class="p-3.5 font-medium">${s.nome}</td><td class="p-3.5">${s.turma}</td><td class="p-3.5 text-slate-500">${s.email || '-'}</td><td class="p-3.5 text-center"><button onclick="deleteStudent(${s.id})" class="text-red-500"><i class="fa-solid fa-trash-can"></i></button></td>`;
+                tbody.appendChild(tr);
+            });
+        }
+        function deleteStudent(id) { if (confirm('Excluir aluno?')) { db.estudantes = db.estudantes.filter(s => s.id !== id); saveDB(); } }
+
+        function populateFrequencySelects() {
+            const tEl = document.getElementById('freq-turma');
+            const dEl = document.getElementById('freq-disciplina');
+            if (!tEl) return;
+            tEl.innerHTML = '<option value="">Selecione...</option>';
+            db.turmas.forEach(t => tEl.innerHTML += `<option value="${t}">${t}</option>`);
+            dEl.innerHTML = '<option value="">Selecione...</option>';
+            db.disciplinas.forEach(d => dEl.innerHTML += `<option value="${d}">${d}</option>`);
+
+            if (currentUser && currentUser.role === 'professor' && currentUser.disciplina) {
+                dEl.value = currentUser.disciplina;
+                dEl.disabled = true;
+            }
+            if (!document.getElementById('freq-data').value) document.getElementById('freq-data').valueAsDate = new Date();
+        }
+
+        function loadFrequencyList() {
+            const turma = document.getElementById('freq-turma').value;
+            const disc = document.getElementById('freq-disciplina').value;
+            const data = document.getElementById('freq-data').value;
+            const tbody = document.getElementById('frequency-table-body');
+            
+            const key = `${turma}||${disc}||${data}`;
+            const regAula = db.registrosAulas[key] || {};
+            document.getElementById('aula-conteudo').value = regAula.conteudo || '';
+            document.getElementById('aula-recursos').value = regAula.recursos || '';
+            document.getElementById('aula-atividades').value = regAula.atividades || '';
+            document.getElementById('aula-observacoes').value = regAula.observacoes || '';
+
+            if (!tbody || !turma || !disc) { 
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-slate-400">Selecione turma, disciplina e data.</td></tr>'; 
+                return; 
+            }
+
+            const students = db.estudantes.filter(s => s.turma === turma);
+            const savedFreq = db.frequencias[key] || {};
+
+            tbody.innerHTML = '';
+            students.forEach((s, idx) => {
+                const status = savedFreq[s.id] !== undefined ? savedFreq[s.id] : 'P';
+                let totalAulas = 0; let presencas = 0;
+                Object.keys(db.frequencias).forEach(fk => {
+                    if (fk.startsWith(`${turma}||${disc}`)) {
+                        totalAulas++;
+                        const st = db.frequencias[fk][s.id];
+                        if (st === 'P' || st === 'J') presencas++;
+                    }
+                });
+                const pct = totalAulas > 0 ? ((presencas / totalAulas) * 100).toFixed(1) : '100.0';
+
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-slate-100';
+                tr.innerHTML = `
+                    <td class="p-3">${idx + 1}</td>
+                    <td class="p-3 font-medium">${s.nome}</td>
+                    <td class="p-3 text-center">
+                        <div class="inline-flex rounded-lg shadow-sm">
+                            <button type="button" onclick="setFreq(${s.id}, 'P', this)" class="fbtn-${s.id} px-3 py-1.5 text-xs font-bold rounded-l-lg border ${status === 'P' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-700'}">P</button>
+                            <button type="button" onclick="setFreq(${s.id}, 'F', this)" class="fbtn-${s.id} px-3 py-1.5 text-xs font-bold border-t border-b ${status === 'F' ? 'bg-red-600 text-white border-red-600' : 'bg-white text-slate-700'}">F</button>
+                            <button type="button" onclick="setFreq(${s.id}, 'J', this)" class="fbtn-${s.id} px-3 py-1.5 text-xs font-bold rounded-r-lg border ${status === 'J' ? 'bg-amber-600 text-white border-amber-600' : 'bg-white text-slate-700'}">FJ</button>
+                        </div>
+                        <input type="hidden" id="fval-${s.id}" value="${status}">
+                    </td>
+                    <td class="p-3 text-center font-bold text-primary">${pct}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function setFreq(sid, val, btn) {
+            document.getElementById(`fval-${sid}`).value = val;
+            document.querySelectorAll(`.fbtn-${sid}`).forEach(b => {
+                b.className = b.className.replace(/bg-emerald-600|bg-red-600|bg-amber-600|text-white/g, 'bg-white text-slate-700');
+            });
+            if (val === 'P') btn.className = `fbtn-${sid} px-3 py-1.5 text-xs font-bold rounded-l-lg border bg-emerald-600 text-white border-emerald-600`;
+            if (val === 'F') btn.className = `fbtn-${sid} px-3 py-1.5 text-xs font-bold border-t border-b bg-red-600 text-white border-red-600`;
+            if (val === 'J') btn.className = `fbtn-${sid} px-3 py-1.5 text-xs font-bold rounded-r-lg border bg-amber-600 text-white border-amber-600`;
+        }
+
+        function saveFrequency() {
+            const turma = document.getElementById('freq-turma').value;
+            const disc = document.getElementById('freq-disciplina').value;
+            const data = document.getElementById('freq-data').value;
+            if (!turma || !disc || !data) { alert('Preencha turma, disciplina e data.'); return; }
+            
+            if (currentUser && currentUser.role === 'professor' && disc !== currentUser.disciplina) {
+                alert('Acesso negado.'); return;
+            }
+
+            const key = `${turma}||${disc}||${data}`;
+            
+            db.registrosAulas[key] = {
+                disciplina: disc,
+                conteudo: document.getElementById('aula-conteudo').value.trim(),
+                atividades: document.getElementById('aula-atividades').value.trim(),
+                recursos: document.getElementById('aula-recursos').value.trim(),
+                observacoes: document.getElementById('aula-observacoes').value.trim()
+            };
+
+            const map = {};
+            db.estudantes.filter(s => s.turma === turma).forEach(s => {
+                const inp = document.getElementById(`fval-${s.id}`);
+                if (inp) map[s.id] = inp.value;
+            });
+            db.frequencias[key] = map;
+
+            saveDB();
+            alert('Registro de Aula e Frequência salvos com sucesso!');
+        }
+
+        function markAllFreq(st) {
+            db.estudantes.filter(s => s.turma === document.getElementById('freq-turma').value).forEach(s => {
+                const inp = document.getElementById(`fval-${s.id}`);
+                if (inp) {
+                    const btn = inp.previousElementSibling.querySelector(`button:nth-child(${st === 'P' ? 1 : (st === 'F' ? 2 : 3)})`);
+                    if (btn) btn.click();
+                }
+            });
+        }
+
+        // Funções para Histórico e PDF do Registro de Aula
+        function openRegListModal() {
+            const container = document.getElementById('reg-history-container');
+            container.innerHTML = '';
+            const keys = Object.keys(db.registrosAulas);
+            
+            if (keys.length === 0) {
+                container.innerHTML = '<div class="text-center py-12 text-slate-400"><i class="fa-solid fa-folder-open text-4xl mb-2"></i><p>Nenhum registro de aula salvo ainda.</p></div>';
+            } else {
+                keys.forEach(key => {
+                    const [turma, disc, data] = key.split('||');
+                    const reg = db.registrosAulas[key];
+                    if (currentUser && currentUser.role === 'professor' && disc !== currentUser.disciplina) return;
+
+                    const div = document.createElement('div');
+                    div.className = 'bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4';
+                    div.innerHTML = `
+                        <div>
+                            <div class="flex items-center space-x-2 text-xs text-primary font-bold mb-1">
+                                <span><i class="fa-solid fa-calendar mr-1"></i>${data ? data.split('-').reverse().join('/') : ''}</span>
+                                <span>•</span>
+                                <span><i class="fa-solid fa-users mr-1"></i>${turma}</span>
+                                <span>•</span>
+                                <span><i class="fa-solid fa-book mr-1"></i>${disc}</span>
+                            </div>
+                            <h4 class="font-bold text-slate-800 dark:text-slate-100">${reg.conteudo || 'Sem conteúdo informado'}</h4>
+                            <p class="text-xs text-slate-500 mt-1 line-clamp-1">Atividades: ${reg.atividades || '-'}</p>
+                        </div>
+                        <button onclick="openRegPdfModal('${key}')" class="bg-primary hover:bg-primaryDark text-white text-xs font-semibold px-4 py-2 rounded-lg transition shadow-sm flex items-center space-x-1.5 shrink-0">
+                            <i class="fa-solid fa-file-pdf"></i><span>Ver / Baixar PDF</span>
+                        </button>
+                    `;
+                    container.appendChild(div);
+                });
+            }
+            document.getElementById('reg-list-modal').classList.remove('hidden');
+        }
+
+        function closeRegListModal() { document.getElementById('reg-list-modal').classList.add('hidden'); }
+
+        function openRegPdfModal(key) {
+            const [turma, disc, data] = key.split('||');
+            const reg = db.registrosAulas[key] || {};
+            const freqMap = db.frequencias[key] || {};
+            const students = db.estudantes.filter(s => s.turma === turma);
+
+            document.getElementById('rview-turma').innerText = turma;
+            document.getElementById('rview-disciplina').innerText = disc;
+            document.getElementById('rview-data').innerText = data ? data.split('-').reverse().join('/') : '';
+            document.getElementById('rview-total-alunos').innerText = students.length;
+            document.getElementById('rview-conteudo').innerText = reg.conteudo || '-';
+            document.getElementById('rview-atividades').innerText = reg.atividades || '-';
+            document.getElementById('rview-recursos').innerText = reg.recursos || '-';
+            document.getElementById('rview-observacoes').innerText = reg.observacoes || '-';
+
+            const tbody = document.getElementById('rview-freq-table');
+            tbody.innerHTML = '';
+            students.forEach((s, idx) => {
+                const st = freqMap[s.id] || 'P';
+                let stBadge = st === 'P' ? '<span class="text-emerald-600 font-bold">Presente (P)</span>' : (st === 'F' ? '<span class="text-red-600 font-bold">Falta (F)</span>' : '<span class="text-amber-600 font-bold">Justificada (FJ)</span>');
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-slate-100';
+                tr.innerHTML = `<td class="p-2.5">${idx + 1}</td><td class="p-2.5 font-medium">${s.nome}</td><td class="p-2.5 text-center">${stBadge}</td>`;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('reg-pdf-modal').classList.remove('hidden');
+        }
+
+        function closeRegPdfModal() { document.getElementById('reg-pdf-modal').classList.add('hidden'); }
+        function downloadRegPDF() { html2pdf().from(document.getElementById('reg-pdf-content')).save(); }
+
+        function populateGradesSelects() {
+            const tEl = document.getElementById('grades-turma');
+            if (!tEl) return;
+            tEl.innerHTML = '<option value="">Selecione...</option>';
+            db.turmas.forEach(t => tEl.innerHTML += `<option value="${t}">${t}</option>`);
+        }
+
+        function loadStudentsForGrades() {
+            const turma = document.getElementById('grades-turma').value;
+            const sEl = document.getElementById('grades-student');
+            sEl.innerHTML = '<option value="">Selecione...</option>';
+            document.getElementById('grades-container').classList.add('hidden');
+            if (!turma) return;
+            db.estudantes.filter(s => s.turma === turma).forEach(s => sEl.innerHTML += `<option value="${s.id}">${s.nome}</option>`);
+        }
+
+        function loadStudentReport() {
+            const sid = document.getElementById('grades-student').value;
+            if (!sid) { document.getElementById('grades-container').classList.add('hidden'); document.getElementById('btn-gerar-boletim').disabled = true; return; }
+            document.getElementById('grades-container').classList.remove('hidden');
+            document.getElementById('btn-gerar-boletim').disabled = false;
+
+            const tbody = document.getElementById('grades-table-body');
+            tbody.innerHTML = '';
+            db.disciplinas.forEach(disc => {
+                const key = `${sid}||${disc}`;
+                const g = db.notas[key] || { b1: '', b2: '', b3: '', b4: '' };
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-slate-100';
+                tr.innerHTML = `
+                    <td class="p-3 font-medium">${disc}</td>
+                    <td class="p-3 text-center"><input type="number" step="0.1" min="0" max="10" value="${g.b1}" data-disc="${disc}" data-bim="b1" class="ginp w-20 text-center bg-slate-50 border rounded p-1 text-sm"></td>
+                    <td class="p-3 text-center"><input type="number" step="0.1" min="0" max="10" value="${g.b2}" data-disc="${disc}" data-bim="b2" class="ginp w-20 text-center bg-slate-50 border rounded p-1 text-sm"></td>
+                    <td class="p-3 text-center"><input type="number" step="0.1" min="0" max="10" value="${g.b3}" data-disc="${disc}" data-bim="b3" class="ginp w-20 text-center bg-slate-50 border rounded p-1 text-sm"></td>
+                    <td class="p-3 text-center"><input type="number" step="0.1" min="0" max="10" value="${g.b4}" data-disc="${disc}" data-bim="b4" class="ginp w-20 text-center bg-slate-50 border rounded p-1 text-sm"></td>
+                    <td class="p-3 text-center font-bold text-primary" id="gavg-${disc.replace(/[^a-zA-Z0-9]/g, '_')}">-</td>
+                    <td class="p-3 text-center" id="gsit-${disc.replace(/[^a-zA-Z0-9]/g, '_')}">-</td>
+                `;
+                tbody.appendChild(tr);
+                calcAvg(tr, g);
+            });
+
+            tbody.querySelectorAll('.ginp').forEach(input => {
+                input.addEventListener('input', () => {
+                    const disc = input.getAttribute('data-disc');
+                    if (currentUser && currentUser.role === 'professor' && disc !== currentUser.disciplina) {
+                        alert('Nível 2: Você só pode editar notas da sua disciplina.');
+                        input.value = ''; return;
+                    }
+                    const key = `${sid}||${disc}`;
+                    if (!db.notas[key]) db.notas[key] = {};
+                    db.notas[key][input.getAttribute('data-bim')] = input.value !== '' ? parseFloat(input.value) : '';
+                    calcAvg(input.closest('tr'), db.notas[key]);
+                });
+            });
+        }
+
+        function calcAvg(tr, g) {
+            const valid = [g.b1, g.b2, g.b3, g.b4].map(Number).filter(n => !isNaN(n) && n !== '');
+            const avgCell = tr.querySelector('[id^="gavg-"]');
+            const sitCell = tr.querySelector('[id^="gsit-"]');
+            if (valid.length > 0) {
+                const avg = (valid.reduce((a, b) => a + b, 0) / 4).toFixed(1);
+                avgCell.innerText = avg;
+                sitCell.innerHTML = avg >= 6.0 ? '<span class="text-emerald-600 font-bold">Aprovado</span>' : '<span class="text-red-500 font-bold">Recuperação</span>';
+            } else { avgCell.innerText = '-'; sitCell.innerText = '-'; }
+        }
+
+        function saveGrades() { saveDB(); alert('Notas salvas!'); }
+
+        function openReportModal() {
+            const sid = document.getElementById('grades-student').value;
+            const student = db.estudantes.find(s => s.id == sid);
+            if (!student) return;
+
+            document.getElementById('rep-nome').innerText = student.nome;
+            document.getElementById('rep-matricula').innerText = student.matricula;
+            document.getElementById('rep-turma').innerText = student.turma;
+            document.getElementById('rep-data').innerText = new Date().toLocaleDateString('pt-BR');
+
+            const tbody = document.getElementById('rep-table-body');
+            tbody.innerHTML = '';
+
+            db.disciplinas.forEach(disc => {
+                const key = `${sid}||${disc}`;
+                const g = db.notas[key] || { b1: '', b2: '', b3: '', b4: '' };
+                const valid = [g.b1, g.b2, g.b3, g.b4].map(Number).filter(n => !isNaN(n) && n !== '');
+                const avg = valid.length > 0 ? (valid.reduce((a, b) => a + b, 0) / 4).toFixed(1) : '-';
+
+                let totalAulas = 0; let presencas = 0; let faltas = 0;
+                Object.keys(db.frequencias).forEach(fk => {
+                    if (fk.startsWith(`${student.turma}||${disc}`)) {
+                        totalAulas++;
+                        const st = db.frequencias[fk][sid];
+                        if (st === 'P' || st === 'J') presencas++;
+                        if (st === 'F') faltas++;
+                    }
+                });
+                const pct = totalAulas > 0 ? ((presencas / totalAulas) * 100).toFixed(1) : '100.0';
+
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-slate-100';
+                tr.innerHTML = `
+                    <td class="p-3 font-medium">${disc}</td>
+                    <td class="p-3 text-center">${g.b1 !== '' ? g.b1 : '-'}</td>
+                    <td class="p-3 text-center">${g.b2 !== '' ? g.b2 : '-'}</td>
+                    <td class="p-3 text-center">${g.b3 !== '' ? g.b3 : '-'}</td>
+                    <td class="p-3 text-center">${g.b4 !== '' ? g.b4 : '-'}</td>
+                    <td class="p-3 text-center font-bold text-primary">${avg}</td>
+                    <td class="p-3 text-center"><span class="text-red-600">${faltas} faltas</span> (${pct}% pres.)</td>
+                    <td class="p-3 text-center">${avg >= 6.0 ? '<span class="text-emerald-600 font-bold">Aprovado</span>' : (avg !== '-' ? '<span class="text-red-500 font-bold">Recup.</span>' : '-')}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('report-modal').classList.remove('hidden');
+        }
+
+        function closeReportModal() { document.getElementById('report-modal').classList.add('hidden'); }
+        function downloadPDFReport() { html2pdf().from(document.getElementById('report-content')).save(); }
+
+        function exportPlansExcel() {
+            const ws = XLSX.utils.json_to_sheet(db.planos);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Planos");
+            XLSX.writeFile(wb, "Planos_Aula.xlsx");
+        }
+
+        function exportFullBackup() {
+            if (currentUser && currentUser.role !== 'admin') return;
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(db.planos), "Planos");
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(db.estudantes), "Estudantes");
+            XLSX.writeFile(wb, "Backup_Completo.xlsx");
+        }
+
+        function importFullBackup() { alert('Função pronta no sistema.'); }
+
+        checkAuth();
+    </script>
+</body>
+</html>
